@@ -26,7 +26,7 @@ namespace System
         {
             queue = new ListQueue<Task>();
             ListQueue<Task> listQueue = new ListQueue<Task>();
-            //Random random = new Random();
+            Random random = new Random();
             int id = 0;
             for (int i = 0; i < t.Count; i++)
             {

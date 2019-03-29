@@ -33,7 +33,7 @@ namespace System
                 {
                     time += generateEvent(lambda);
                     double timeTaskInit = time;
-                    
+                    double trust = random.NextDouble();
                     listQueue.Enqueue(new Task(timeTaskInit, timeDeadline, t.ElementAt(i), id, trust));
                     id++;
                 }
