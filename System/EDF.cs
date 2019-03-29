@@ -11,7 +11,6 @@ namespace System
         ListQueue<Task> queue;
         ListQueue<Task> listQ;
         ListQueue<Task> ready;
-        double quantum;
 
         List<int> number;
         double free;
@@ -20,7 +19,7 @@ namespace System
         Cluster cluster;
         double a;
         double b;
-        public EDF(double lambda, List<double> t, List<int> k, int n, double quantum, int clusterNum, double a, double b, List<double> percent, double tetta, double eps, double crit)
+        public EDF(double lambda, List<double> t, List<int> k, int n, int clusterNum, double a, double b, List<double> percent, double tetta, double eps, double crit)
         {
             queue = new ListQueue<Task>();
             ListQueue<Task> listQueue = new ListQueue<Task>();
@@ -34,7 +33,7 @@ namespace System
                 {
                     time += generateEvent(lambda);
                     double timeTaskInit = time;
-                    double trust = random.NextDouble();
+                    
                     listQueue.Enqueue(new Task(timeTaskInit, timeDeadline, t.ElementAt(i), id, trust));
                     id++;
                 }
@@ -58,7 +57,6 @@ namespace System
             listQ = new ListQueue<Task>();
             ready = new ListQueue<Task>();
             //overdue = new ListQueue<Task>();
-            this.quantum = quantum;
             cluster = new Cluster(clusterNum, percent, tetta, eps, crit);
             this.a = a;
             this.b = b;
@@ -78,35 +76,6 @@ namespace System
             while ((listQ.Count != 0) || (queue.Count != 0))
             {
                 checkQueue(time);
-                /*//Загружаем задачи из плана
-                for (int i = 0;i<queue.Count;i++) {
-                    Task t = queue.ElementAt(i);
-                    if (time > t.getTimeInit()) {
-                        listQ.Add(t);
-                    }
-                }
-                //Удаляем просроченные задачи
-                List<int> ptr = new List<int>();
-                for (int i = 0; i < queue.Count; i++) {
-                    Task t = listQ.ElementAt(i);
-                    if (time > (t.getTimeInit()+t.getDeadline()))
-                    {
-                        ptr.Add(t.getId());
-                    }
-                }
-                foreach (int p in ptr) {
-                    Task t=null;
-                    foreach (Task t1 in listQ) {
-                        if (t1.getId() == p) {
-                            t = t1;
-                            break;
-                        }
-                    }
-                    t.setEnd(time);
-                    ready.Add(t);
-                    listQ.Remove(t);
-                }
-                */
                 cluster.voting();
                 if ((listQ.Count > 0) || (cluster.freeCluster(time)))
                 {

@@ -45,6 +45,18 @@ namespace System
             }
         }
 
+        public double getFirstTime() {
+            double T = double.MaxValue;
+            foreach (Unit unit in units)
+            {
+                if (unit.getTimeUntilBusy()<T)
+                {
+                    T = unit.getTimeUntilBusy();
+                }
+            }
+            return T;
+        }
+
         public void voting() {
             for (int i = 0; i < units.Count; i++) {
                 Random r = new Random();

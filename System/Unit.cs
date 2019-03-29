@@ -38,5 +38,9 @@ namespace System
         public int getTrust() {
             return trust;
         }
+
+        public double getTimeUntilBusy() {
+            return timeUntilBusy;
+        }
     }
 }

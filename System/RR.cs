@@ -17,7 +17,12 @@ namespace System
         List<int> number;
         double free;
         double busy;
-        public RR(double lambda, List<double> t, List<int> k, int n, double quantum)
+
+        Cluster cluster;
+        double a;
+        double b;
+
+        public RR(double lambda, List<double> t, List<int> k, int n, double quantum, int clusterNum, double a, double b, List<double> percent, double tetta, double eps, double crit)
         {
             queue = new ListQueue<Task>();
             ListQueue<Task> listQueue = new ListQueue<Task>();
@@ -31,7 +36,8 @@ namespace System
                 {
                     time += generateEvent(lambda);
                     double timeTaskInit = time;
-                    listQueue.Enqueue(new Task(timeTaskInit, timeDeadline, t.ElementAt(i), id,0));
+                    double trust = random.NextDouble();
+                    listQueue.Enqueue(new Task(timeTaskInit, timeDeadline, t.ElementAt(i), id, trust));
                     id++;
                 }
             }
@@ -55,6 +61,9 @@ namespace System
             ready = new ListQueue<Task>();
             //overdue = new ListQueue<Task>();
             this.quantum = quantum;
+            cluster = new Cluster(clusterNum, percent, tetta, eps, crit);
+            this.a = a;
+            this.b = b;
         }
 
         public RR(ListQueue<Task> queue)
@@ -71,57 +80,49 @@ namespace System
             while ((listQ.Count != 0) || (queue.Count != 0))
             {
                 checkQueue(time);
-                /*//Загружаем задачи из плана
-                for (int i = 0;i<queue.Count;i++) {
-                    Task t = queue.ElementAt(i);
-                    if (time > t.getTimeInit()) {
-                        listQ.Add(t);
-                    }
-                }
-                //Удаляем просроченные задачи
-                List<int> ptr = new List<int>();
-                for (int i = 0; i < queue.Count; i++) {
-                    Task t = listQ.ElementAt(i);
-                    if (time > (t.getTimeInit()+t.getDeadline()))
-                    {
-                        ptr.Add(t.getId());
-                    }
-                }
-                foreach (int p in ptr) {
-                    Task t=null;
-                    foreach (Task t1 in listQ) {
-                        if (t1.getId() == p) {
-                            t = t1;
-                            break;
-                        }
-                    }
-                    t.setEnd(time);
-                    ready.Add(t);
-                    listQ.Remove(t);
-                }
-                */
-                if (listQ.Count > 0)
+                cluster.voting();
+                if ((listQ.Count > 0) || (cluster.freeCluster(time)))
                 {
                     number.Add(listQ.Count);
-                    Task t = listQ.Dequeue();
-                    t.execute(time, quantum);
-                    //В список решенных
-                    if (t.getTime() > 0)
+                    while ((listQ.Count > 0) && (cluster.freeCluster(time)))
                     {
-                        ready.Enqueue(t);
+                        Task t = listQ.Dequeue();
+                        cluster.setTask(time + quantum);
+                        t.execute(time, quantum);
+                        //В список решенных
+                        if (t.getTime() > 0)
+                        {
+                            ready.Enqueue(t);
+                        }
+                        //На дальнейшую обработку
+                        else
+                        {
+                            listQ.Enqueue(t);
+                        }
                     }
-                    //На дальнейшую обработку
+                }
+                if (!cluster.freeCluster(time))
+                {
+                    time = cluster.getFirstTime() + 0.00001;
+                }
+                else {
+                    double initTime = double.MaxValue;
+                    for (int i = 0; i < queue.Count; i++)
+                    {
+                        if (queue.ElementAt(i).getTimeInit() < initTime)
+                        {
+                            initTime = queue.ElementAt(i).getTimeInit();
+                        }
+                    }
+                    if (initTime == double.MaxValue)
+                    {
+                        time = double.MaxValue;
+                    }
                     else
                     {
-                        listQ.Enqueue(t);
+                        time = initTime + 0.00001;
                     }
-                    busy += quantum;
                 }
-                else
-                {
-                    free += quantum;
-                }
-                time += quantum;
             }
         }
 
